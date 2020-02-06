@@ -35,6 +35,13 @@ namespace testParma
             Console.WriteLine("AssignmenedNotUpdated");
             Console.WriteLine($"First name: {Person.FirstName}, Last name: {Person.LastName}\n");
 
+            //or by ref
+
+            //!!!most important!!!
+            //AssignmenedUpdated(ref Person);
+            //Console.WriteLine("AssignmenedUpdated");
+            //Console.WriteLine($"First name: {Person.FirstName}, Last name: {Person.LastName}\n");
+
             unsafe
             {
                 TypedReference tr = __makeref(Person);
@@ -68,6 +75,31 @@ namespace testParma
         }
 
         public static void AssignmenedNotUpdated(Person person)
+        {
+            var newPerson = new Person()
+            {
+                FirstName = "Ded",
+                LastName = "Dedov"
+            };
+
+            unsafe
+            {
+                TypedReference tr = __makeref(person);
+                IntPtr ptr = **(IntPtr**)(&tr);
+                Console.WriteLine($"---   Person object passed to method, but BEFORE changes/assign: {ptr}");
+            }
+            person = newPerson;
+
+            unsafe
+            {
+                TypedReference tr = __makeref(person);
+                IntPtr ptr = **(IntPtr**)(&tr);
+                Console.WriteLine($"---   Person object passed to method, but AFTER changes/assign: {ptr}");
+                Console.WriteLine();
+            }
+        }
+
+        public static void AssignmenedUpdated(ref Person person)
         {
             var newPerson = new Person()
             {
