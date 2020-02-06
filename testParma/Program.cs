@@ -9,128 +9,98 @@ namespace testParma
     {
         static void Main(string[] args)
         {
-            A b = new B();
-            b.Str();
+            var Person = new Person() { FirstName = "Vlad", LastName = "Vladov" };
 
-            Console.WriteLine("============================================");
+            WontUpdate(Person);
+            Console.WriteLine("WontUpdate");
+            Console.WriteLine($"First name: {Person.FirstName}, Last name: {Person.LastName}\n");
 
-            A b2 = new B();
-            b2.Str2();
+            UpdateImplicitly(Person);
+            Console.WriteLine("UpdateImplicitly");
+            Console.WriteLine($"First name: {Person.FirstName}, Last name: {Person.LastName}\n");
 
-            Console.WriteLine("============================================");
+            UpdateExplicitly(ref Person);
+            Console.WriteLine("UpdateExplicitly");
+            Console.WriteLine($"First name: {Person.FirstName}, Last name: {Person.LastName}\n");
 
-            A b3 = new B();
-            b3.Str3();
+            unsafe
+            {
+                TypedReference tr = __makeref(Person);
+                IntPtr ptr = **(IntPtr**)(&tr);
+                Console.WriteLine($"---   Person object before passing to method: {ptr}");
+            }
 
-            Console.WriteLine("============================================");
+            //!!!most important!!!
+            AssignmenedNotUpdated(Person);
+            Console.WriteLine("AssignmenedNotUpdated");
+            Console.WriteLine($"First name: {Person.FirstName}, Last name: {Person.LastName}\n");
 
-            A b4 = new B();
-            b4.Str4();
-
-            Console.WriteLine("============================================");
-
-            A a;
-            a = new B();
-            a = A.StatMethodReturnA();
+            unsafe
+            {
+                TypedReference tr = __makeref(Person);
+                IntPtr ptr = **(IntPtr**)(&tr);
+                Console.WriteLine($"---   Person object after method completed: {ptr}");
+            }
 
             Console.ReadLine();
         }
+
+        public static void WontUpdate(Person p)
+        {
+            //New instance does jack...
+            var newP = new Person() { FirstName = p.FirstName, LastName = p.LastName };
+            newP.FirstName = "Dasha";
+            newP.LastName = "Dasheva";
+        }
+
+        public static void UpdateImplicitly(Person p)
+        {
+            //Passing by reference implicitly
+            p.FirstName = "Dasha";
+            p.LastName = "Dasheva";
+        }
+
+        public static void UpdateExplicitly(ref Person p)
+        {
+            //Again passing by reference explicitly (reduntant)
+            p.FirstName = "Dasha";
+            p.LastName = "Dasheva";
+        }
+
+        public static void AssignmenedNotUpdated(Person person)
+        {
+            var newPerson = new Person()
+            {
+                FirstName = "Ded",
+                LastName = "Dedov"
+            };
+
+            unsafe
+            {
+                TypedReference tr = __makeref(person);
+                IntPtr ptr = **(IntPtr**)(&tr);
+                Console.WriteLine($"---   Person object passed to method, but BEFORE changes/assign: {ptr}");
+            }
+            person = newPerson;
+
+            unsafe
+            {
+                TypedReference tr = __makeref(person);
+                IntPtr ptr = **(IntPtr**)(&tr);
+                Console.WriteLine($"---   Person object passed to method, but AFTER changes/assign: {ptr}");
+                Console.WriteLine();
+            }
+        }
     }
 
-    public class A
+    public class Person
     {
-        public virtual int PropA { get { return 3; }}
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
 
-        static A()
+        public string printName()
         {
-            Console.WriteLine("Static ctor A");
-        }
-
-        public A()
-        {
-            Console.WriteLine("Ctor A");
-        }
-
-        public A(int x)
-        {
-            Console.WriteLine($"Ctor A with x: {x}");
-        }
-
-        public static void StatMethod()
-        {
-            Console.WriteLine("StatMethod");
-        }
-
-        public static A StatMethodReturnA()
-        {
-            Console.WriteLine("StatMethodReturnA");
-            return new A();
-        }
-
-        public virtual void Str()
-        {
-            Console.WriteLine("A");
-        }
-
-        public virtual void Str2()
-        {
-            Console.WriteLine("A");
-        }
-
-        public virtual void Str3()
-        {
-            Console.WriteLine("A");
-        }
-
-        public void Str4()
-        {
-            Console.WriteLine("A");
+            return $"First name: {FirstName} Last name:{LastName}";
         }
     }
-
-    public class B : A
-    {
-        public override int PropA => 5;
-
-        static B()
-        {
-            Console.WriteLine("Static ctor B");
-        }
-
-        public B()
-        {
-            Console.WriteLine("Ctor B");
-        }
-
-        public B(int x) : base(x)
-        {
-            Console.WriteLine($"Ctor B with x: {x}");
-        }
-
-        public override void Str()
-        {
-            Console.WriteLine("B");
-        }
-
-        public void Str2()
-        {
-            Console.WriteLine("B");
-        }
-
-        public new void Str3()
-        {
-            Console.WriteLine("B");
-        }
-
-        public new void Str4()
-        {
-            Console.WriteLine("B");
-        }
-
-        public void OnlyBMethod()
-        {
-            Console.WriteLine("OnlyBMethod");
-        } 
-    }
-
 }
