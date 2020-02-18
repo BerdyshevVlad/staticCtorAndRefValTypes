@@ -5,134 +5,71 @@ using System.Linq;
 
 namespace testParma
 {
+    // Интерфейс, определяющий метод Change
+    internal interface IChangeBoxedPoint
+    {
+        void Change(Int32 x, Int32 y);
+    }
+
+    // Point - значимый тип.
+    internal struct Point : IChangeBoxedPoint
+    {
+        private Int32 X, Y;
+        public Point(Int32 x, Int32 y)
+        {
+            X = x;
+            Y = y;
+        }
+        public void Change(Int32 x, Int32 y)
+        {
+            X = x; Y = y;
+        }
+        public override String ToString()
+        {
+            return String.Format("({0}, {1})", X.ToString(), Y.ToString());
+        }
+    }
     class Program
     {
         static void Main(string[] args)
         {
-            var Person = new Person() { FirstName = "Vlad", LastName = "Vladov" };
+            Point p = new Point(1, 1);
+            Console.WriteLine(p);
 
-            WontUpdate(Person);
-            Console.WriteLine("WontUpdate");
-            Console.WriteLine($"First name: {Person.FirstName}, Last name: {Person.LastName}\n");
+            p.Change(2, 2);
+            Console.WriteLine(p);
 
-            UpdateImplicitly(Person);
-            Console.WriteLine("UpdateImplicitly");
-            Console.WriteLine($"First name: {Person.FirstName}, Last name: {Person.LastName}\n");
+            Object o = p;
+            Console.WriteLine(o);
 
-            UpdateExplicitly(ref Person);
-            Console.WriteLine("UpdateExplicitly");
-            Console.WriteLine($"First name: {Person.FirstName}, Last name: {Person.LastName}\n");
+            ((Point)o).Change(3, 3);
+            Console.WriteLine(o);
 
-            unsafe
+            // p упаковывается, упакованный объект изменяется и освобождается
+            Console.WriteLine("p упаковывается, упакованный объект изменяется и освобождается");
+            ((IChangeBoxedPoint)p).Change(4, 4);
+            Console.WriteLine(p);
+
+            // Упакованный объект изменяется и выводится
+            Console.WriteLine("Упакованный объект изменяется и выводится");
+            ((IChangeBoxedPoint)o).Change(5, 5);
+            Console.WriteLine(o);
+
+            //------------------------------------------------------
+            Int32 first = 5;
+            Object obj = first; // Упаковка first; obj указывает на упакованный объект
+            try
             {
-                TypedReference tr = __makeref(Person);
-                IntPtr ptr = **(IntPtr**)(&tr);
-                Console.WriteLine($"---   Person object before passing to method: {ptr}");
+                Int16 second = (Int16)obj; // Генерируется InvalidCastException
             }
-
-            //!!!most important!!!
-            AssignmenedNotUpdated(Person);
-            Console.WriteLine("AssignmenedNotUpdated");
-            Console.WriteLine($"First name: {Person.FirstName}, Last name: {Person.LastName}\n");
-
-            //or by ref
-
-            //!!!most important!!!
-            //AssignmenedUpdated(ref Person);
-            //Console.WriteLine("AssignmenedUpdated");
-            //Console.WriteLine($"First name: {Person.FirstName}, Last name: {Person.LastName}\n");
-
-            unsafe
+            catch (Exception)
             {
-                TypedReference tr = __makeref(Person);
-                IntPtr ptr = **(IntPtr**)(&tr);
-                Console.WriteLine($"---   Person object after method completed: {ptr}");
+                Int16 second = (Int16)(Int32)obj; // Генерируется InvalidCastException
+                Console.WriteLine($"(Int16)(Int32)obj works good! Variable second is: {second}");
             }
+            
 
             Console.ReadLine();
         }
-
-        public static void WontUpdate(Person p)
-        {
-            //New instance does jack...
-            var newP = new Person() { FirstName = p.FirstName, LastName = p.LastName };
-            newP.FirstName = "Dasha";
-            newP.LastName = "Dasheva";
-        }
-
-        public static void UpdateImplicitly(Person p)
-        {
-            //Passing by reference implicitly
-            p.FirstName = "Dasha";
-            p.LastName = "Dasheva";
-        }
-
-        public static void UpdateExplicitly(ref Person p)
-        {
-            //Again passing by reference explicitly (reduntant)
-            p.FirstName = "Dasha";
-            p.LastName = "Dasheva";
-        }
-
-        public static void AssignmenedNotUpdated(Person person)
-        {
-            var newPerson = new Person()
-            {
-                FirstName = "Ded",
-                LastName = "Dedov"
-            };
-
-            unsafe
-            {
-                TypedReference tr = __makeref(person);
-                IntPtr ptr = **(IntPtr**)(&tr);
-                Console.WriteLine($"---   Person object passed to method, but BEFORE changes/assign: {ptr}");
-            }
-            person = newPerson;
-
-            unsafe
-            {
-                TypedReference tr = __makeref(person);
-                IntPtr ptr = **(IntPtr**)(&tr);
-                Console.WriteLine($"---   Person object passed to method, but AFTER changes/assign: {ptr}");
-                Console.WriteLine();
-            }
-        }
-
-        public static void AssignmenedUpdated(ref Person person)
-        {
-            var newPerson = new Person()
-            {
-                FirstName = "Ded",
-                LastName = "Dedov"
-            };
-
-            unsafe
-            {
-                TypedReference tr = __makeref(person);
-                IntPtr ptr = **(IntPtr**)(&tr);
-                Console.WriteLine($"---   Person object passed to method, but BEFORE changes/assign: {ptr}");
-            }
-            person = newPerson;
-
-            unsafe
-            {
-                TypedReference tr = __makeref(person);
-                IntPtr ptr = **(IntPtr**)(&tr);
-                Console.WriteLine($"---   Person object passed to method, but AFTER changes/assign: {ptr}");
-                Console.WriteLine();
-            }
-        }
-    }
-
-    public class Person
-    {
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-
-        public string printName()
-        {
-            return $"First name: {FirstName} Last name:{LastName}";
-        }
-    }
+    }   
 }
