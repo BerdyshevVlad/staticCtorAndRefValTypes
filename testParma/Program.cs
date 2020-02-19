@@ -5,71 +5,75 @@ using System.Linq;
 
 namespace testParma
 {
-    // Интерфейс, определяющий метод Change
-    internal interface IChangeBoxedPoint
+    public class Object
     {
-        void Change(Int32 x, Int32 y);
+        public virtual Boolean Equals(Object obj)
+        {
+            // Поскольку тип может переопределять метод (при наследовании)
+            // Equals типа Object, этот метод больше не может использоваться для проверки на
+            // тождественность.
+
+            // Если обе ссылки указывают на один и тот же объект,
+            // значит, эти объекты равны
+            if (this == obj) return true;
+            // Предполагаем, что объекты не равны
+            return false;
+        }
+
+        // Для проверки на тождественность нужно всегда вызывать ReferenceEquals (то
+        // есть проверять на предмет того, относятся ли две ссылки к одному объекту). 
+        public static Boolean ReferenceEquals(Object objA, Object objB)
+        {
+            return (objA == objB);
+        }
     }
 
-    // Point - значимый тип.
-    internal struct Point : IChangeBoxedPoint
+    public class ImaginaryNumber :IEquatable<ImaginaryNumber>
     {
-        private Int32 X, Y;
-        public Point(Int32 x, Int32 y)
+        public int RealNumber { get; set; }
+        public int ImaginaryUnit { get; set; }
+
+        public ImaginaryNumber(int realNumber,int imaginaryUnit)
         {
-            X = x;
-            Y = y;
+            RealNumber = realNumber;
+            ImaginaryUnit = imaginaryUnit;
         }
-        public void Change(Int32 x, Int32 y)
+
+        public override bool Equals(object obj)
         {
-            X = x; Y = y;
+            return Equals(obj as ImaginaryNumber);
         }
-        public override String ToString()
+
+        public bool Equals(ImaginaryNumber other)
         {
-            return String.Format("({0}, {1})", X.ToString(), Y.ToString());
+            return other != null && ImaginaryUnit == other.ImaginaryUnit;
+        }
+
+        public override int GetHashCode()
+        {
+            var hashCode = 352033288;
+            hashCode = hashCode * -1521134295 + RealNumber.GetHashCode();
+            return hashCode;
         }
     }
+
     class Program
     {
         static void Main(string[] args)
         {
-            Point p = new Point(1, 1);
-            Console.WriteLine(p);
+            ImaginaryNumber first = new ImaginaryNumber(1,1);
+            ImaginaryNumber second = new ImaginaryNumber(2,1);
 
-            p.Change(2, 2);
-            Console.WriteLine(p);
+            bool result = first == second;
+            bool resultEquals = first.Equals(second);
+            bool resultReference = ReferenceEquals(first,second);
 
-            Object o = p;
-            Console.WriteLine(o);
+            Console.WriteLine($"First == second: {result}");
+            Console.WriteLine($"First equals second: {resultEquals}");
+            Console.WriteLine($"First referenceEquals second: {resultReference}");
 
-            ((Point)o).Change(3, 3);
-            Console.WriteLine(o);
-
-            // p упаковывается, упакованный объект изменяется и освобождается
-            Console.WriteLine("p упаковывается, упакованный объект изменяется и освобождается");
-            ((IChangeBoxedPoint)p).Change(4, 4);
-            Console.WriteLine(p);
-
-            // Упакованный объект изменяется и выводится
-            Console.WriteLine("Упакованный объект изменяется и выводится");
-            ((IChangeBoxedPoint)o).Change(5, 5);
-            Console.WriteLine(o);
-
-            //------------------------------------------------------
-            Int32 first = 5;
-            Object obj = first; // Упаковка first; obj указывает на упакованный объект
-            try
-            {
-                Int16 second = (Int16)obj; // Генерируется InvalidCastException
-            }
-            catch (Exception)
-            {
-                Int16 second = (Int16)(Int32)obj; // Генерируется InvalidCastException
-                Console.WriteLine($"(Int16)(Int32)obj works good! Variable second is: {second}");
-            }
-            
 
             Console.ReadLine();
         }
-    }   
+    }
 }
